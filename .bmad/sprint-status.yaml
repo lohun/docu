@@ -1,0 +1,60 @@
+# Sprint status tracker — DocVersion backend
+# Source of truth: design_spec.md (authoritative), docs/sprint-plan-backend-2026-08-01.md
+
+current_sprint: 4
+velocity:
+  1: 32 # sprint 1 fully completed (32/32)
+  2: 32 # sprint 2 fully completed (32/32)
+  3: 29 # sprint 3 fully completed (29/29)
+  4: 26 # sprint 4 fully completed (26/26)
+
+sprints:
+  - number: 1
+    goal: Foundations + Auth
+    status: done
+    capacity_points: 32
+    stories: [001, 002, 003, 004, 005, 006, 007, 008, 009]
+  - number: 2
+    goal: Tenancy + Sources + Scheduler core
+    status: done
+    capacity_points: 32
+    stories: [010, 011, 012, 013, 014, 015, 016]
+  - number: 3
+    goal: Adapters, Diff, LLM, DB Publish
+    status: done
+    capacity_points: 29
+    stories: [017, 018, 019, 020, 021, 022]
+  - number: 4
+    goal: Publishing, Docs API, Hardening, E2E
+    status: done
+    capacity_points: 26
+    stories: [023, 024, 025, 026, 027]
+
+stories:
+  001: {title: "Project scaffold — FastAPI entrypoint, env config, logging, venv deps", points: 2, status: done}
+  002: {title: "Async SQLAlchemy engine/session + /health", points: 3, status: done}
+  003: {title: "Alembic bootstrap + initial migration (all §6 tables + indexes)", points: 5, status: done}
+  004: {title: "Base model mixins, JSONB support, passlib argon2id context", points: 2, status: done}
+  005: {title: "JWT access/refresh token service + refresh_tokens blocklist", points: 5, status: done}
+  006: {title: "Register + email verification (Brevo via smtplib)", points: 5, status: done}
+  007: {title: "Login + rate limit (slowapi) + logout", points: 3, status: done}
+  008: {title: "Refresh rotation endpoint", points: 2, status: done}
+  009: {title: "Password reset flow", points: 5, status: done}
+  010: {title: "Auth dependency: org from JWT, org_id scoping + role guard", points: 5, status: done}
+  011: {title: "Org invite + membership management", points: 3, status: done}
+  012: {title: "Sources CRUD endpoints", points: 5, status: done}
+  013: {title: "run-now endpoint + per-org rate limit/validation", points: 3, status: done}
+  014: {title: "APScheduler + SQLAlchemyJobStore + per-source jobs", points: 5, status: done}
+  015: {title: "Per-source lock + run_logs + pipeline skeleton", points: 3, status: done}
+  016: {title: "Playwright worker pool (semaphore 3-5) + SSRF target validation", points: 8, status: done}
+  017: {title: "OpenAPI adapter + oasdiff changelog -> diffs.diff_payload", points: 8, status: done}
+  018: {title: "Scrape/webapp adapter: normalization, css_scope_selector, snapshot write", points: 5, status: done}
+  019: {title: "difflib text diff + triviality heuristic", points: 3, status: done}
+  020: {title: "NVIDIA LLM client + Fernet key at rest + structured output contract", points: 5, status: done}
+  021: {title: "LLM throttle/backoff + queue + org_llm_usage metering", points: 5, status: done}
+  022: {title: "DB publish: docs.current_content_md + doc_updates append", points: 3, status: done}
+  023: {title: "Git export mirror (non-blocking failures)", points: 5, status: done}
+  024: {title: "Docs read API + custom-domain org resolution", points: 5, status: done}
+  025: {title: "Retention/cleanup job (90-day) + quota hooks", points: 3, status: done}
+  026: {title: "Security hardening pass", points: 5, status: done}
+  027: {title: "End-to-end pipeline verification + Alembic round-trip test", points: 8, status: done}
