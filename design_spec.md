@@ -29,8 +29,8 @@ The system monitors versioned sources — an organization's own API specs, web a
 | LLM | NVIDIA API Catalog (`https://integrate.api.nvidia.com/v1`), OpenAI-compatible chat completions API, key format `nvapi-...` |
 | Scraping | Playwright, for both third-party sites and any web app source that requires JS rendering |
 | Frontend | React + Vite |
-| Backend | FastAPI + PostgreSQL |
-| Deployment | Bare metal / VM — packages installed directly, no Docker/Kubernetes |
+| Backend | FastAPI + PostgreSQL (managed via Supabase — see §6.2) |
+| Deployment | Bare metal / VM — packages installed directly, no Docker/Kubernetes; Postgres is a managed Supabase project, not a local service |
 | Doc publishing | Auto-publish (no human-approval gate); dual target — database-backed store and git export (see §7.6) |
 | LLM key model | Platform-shared NVIDIA API key, metered per org (no bring-your-own-key in v1) |
 | Default LLM model | `Llama-3.3-70B` via NVIDIA NIM (free tier) |
@@ -144,6 +144,17 @@ refresh_tokens(id, user_id, token_hash, expires_at, revoked_at NULL)
 - Migrations are applied as an explicit deployment step (`alembic upgrade head`), run manually or via a `systemd` `ExecStartPre` on the API service unit so the schema is guaranteed current before the app starts — given there's no orchestrator to sequence this automatically.
 - Every migration should include a tested `downgrade()` path; this matters more on bare metal, where rolling back a bad migration means running `alembic downgrade -1` directly against production rather than redeploying a previous container image.
 
+### 6.2 Database provider: Supabase (managed Postgres)
+
+The system runs on PostgreSQL provided by **Supabase** (managed hosting) rather than a self-managed local Postgres. Supabase *is* PostgreSQL, so the SQLAlchemy models, migrations, and tenancy model are unchanged — only the connection/ops layer differs.
+
+- **Connection:** connect through the **Supavisor pooler (port 6543, session mode)** via the `postgres.<ref>.<region>.pooler.supabase.com` host, TLS enforced (`sslmode=require`). Session mode is required because both the API engine and the APScheduler jobstore hold persistent pooled connections; the transaction/port-pooling mode would break connection reuse and per-source job locks.
+- **Config:** `DOCVERSION_DATABASE_URL` (asyncpg URL) plus `DOCVERSION_DATABASE_SSLMODE` (empty = no forcing; `require` for Supabase). `app/db_urls.py` derives the psycopg2 sync URL (used by the scheduler jobstore) from the same URL and applies SSL per driver — `sslmode` is honoured by both asyncpg and psycopg2 from the query string. Pool sizing, connect timeout, and `pool_pre_ping` are configurable.
+- **Extensions:** the schema uses only core PG constructs (`IDENTITY`, `JSONB`, boolean/text server defaults) — no extensions required, so no Supabase extension-whitelist concerns.
+- **Free tier behaviour:** Supabase free projects can auto-pause compute after ~1 week of inactivity. The scheduler's continuous activity plus the heartbeat probe (see §10) normally prevent this, but the platform must treat DB reachability as alertable, not silent.
+- **Backups:** free tier has no PITR/continuous backups. The DB is the source of truth, so keep the nightly external `pg_dump` cron (targeting the Supabase connection string) writing to local disk; Supabase-managed backups are additional, not relied upon.
+- **Rollback:** because the app talks only via `DOCVERSION_DATABASE_URL`, switching provider is a config change — point the env var back at a local Postgres and nothing else changes.
+
 **Design notes:**
 - `snapshots.raw_storage_ref` points to a file path on disk (e.g. `/var/lib/docversion/snapshots/{id}.raw`) rather than storing large raw HTML/spec blobs directly in Postgres — keeps the DB lean; only the normalized excerpt and hash live in-row for querying.
 - `diffs.diff_payload` as JSONB lets you store oasdiff's structured changelog or a text-diff payload uniformly.
@@ -246,7 +257,7 @@ No Docker/Kubernetes — all services installed directly on the host.
 
 | Component | How it runs |
 |---|---|
-| PostgreSQL | Native OS package (e.g. `apt install postgresql`), separate DB per environment |
+| PostgreSQL | **Managed by Supabase** (no local service). One project per environment; connect via the Supavisor pooler (session mode, port 6543) with `DOCVERSION_DATABASE_SSLMODE=require`. Whitelist the host's IP and pick a region near the VM |
 | Schema migrations | Alembic, run via `alembic upgrade head` as an explicit pre-start deployment step |
 | FastAPI app | `uvicorn` under a `systemd` unit, `--workers N` |
 | Scheduler | Separate Python process, its own `systemd` unit |
@@ -256,11 +267,11 @@ No Docker/Kubernetes — all services installed directly on the host.
 | Email | Brevo SMTP relay — outbound only, credentials in the env file, no local mail server needed |
 | Custom domain TLS | `certbot` run per verified org custom domain (DNS or HTTP-01 challenge), certs auto-renewed via `certbot`'s systemd timer; Nginx config generated/reloaded per newly verified domain |
 
-**Process supervision:** since there's no orchestrator to restart crashed containers, `systemd` (`Restart=on-failure`) is the safety net for both the API and scheduler units — this should be treated as a hard requirement, not an afterthought, given a crashed scheduler silently means "nothing gets tracked" until someone notices.
+**Process supervision:** since there's no orchestrator to restart crashed containers, `systemd` (`Restart=on-failure`) is the safety net for both the API and scheduler units — this should be treated as a hard requirement, not an afterthought, given a crashed scheduler silently means "nothing gets tracked" until someone notices. Additionally run `scripts/db_heartbeat.sh` on a short `systemd` timer so an unreachable/paused Supabase database surfaces immediately instead of silently stalling the pipeline.
 
-**Secrets:** environment file (`/etc/docversion/.env`, file-permission-restricted) for DB credentials, JWT signing secret, and the Fernet master key used to encrypt org NVIDIA API keys — never in source control.
+**Secrets:** environment file (`/etc/docversion/.env`, file-permission-restricted) for the Supabase DB URL, JWT signing secret, and the Fernet master key used to encrypt org NVIDIA API keys — never in source control.
 
-**Backups:** standard `pg_dump` cron/systemd-timer job, since Postgres is the sole source of truth for everything except raw snapshot blobs on disk (which should be backed up too, or treated as regenerable/non-critical).
+**Backups:** the DB is the sole source of truth for everything except raw snapshot blobs on disk (which should be backed up too, or treated as regenerable/non-critical). Free-tier Supabase has no PITR, so run `scripts/backup_db.sh` nightly via a `systemd` timer/cron (custom-format `pg_dump` to local disk, pruned after N days); Supabase-managed backups are additional if the project is upgraded.
 
 ---
 
@@ -295,6 +306,7 @@ No Docker/Kubernetes — all services installed directly on the host.
 | NVIDIA key model | Single platform-shared key, usage metered per org (§7.5, §6) — no bring-your-own-key in v1 |
 | Email delivery | Brevo, via SMTP (§5) |
 | Custom domains for docs | Both — shared app URL and org-configured custom domains supported (§7.6) |
+| Database provider | Supabase managed Postgres (Supavisor pooler, session mode, TLS) across all environments; app-level tenancy and Alembic migrations unchanged (§6.2) |
 | Default LLM model | `Llama-3.3-70B` via NVIDIA NIM, free tier (§7.5) — free-tier rate limits require explicit throttling/queueing design, and should be reassessed before scale |
 
 **Remaining open item:** the free-tier rate limit ceiling for `Llama-3.3-70B` on NVIDIA NIM isn't specified here since it's subject to change — confirm the current published limit at implementation time and size the throttling/queue design (§7.5) against it.

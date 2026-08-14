@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     debug: bool = False
     log_level: str = "INFO"
     database_url: str = "postgresql+asyncpg://docversion:docversion@localhost:5432/docversion"
+    database_sslmode: str = ""
+    database_pool_size: int = 5
+    database_max_overflow: int = 10
+    database_connect_timeout_seconds: int = 10
     jwt_secret_key: str = "dev-only-insecure-secret-change-me"
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 30

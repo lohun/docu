@@ -8,16 +8,22 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from app.config import get_settings
+from app.db_urls import with_sslmode
 from app.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-# DB URL from the committed .ini file.
-default_url = config.get_main_option("sqlalchemy.url")
-print(f"Using database URL: {default_url}")
-config.set_main_option("sqlalchemy.url", default_url.replace("%", "%%"))
+# Resolve the DB URL from the app settings (DOCVERSION_DATABASE_URL env var or
+# .env), falling back to the committed alembic.ini value. This makes migrations
+# target the configured database (e.g. the Supabase pooler) instead of a
+# hardcoded local URL. sslmode is applied so asyncpg and psycopg2 both use TLS
+# when connecting to a managed/hosted Postgres.
+settings = get_settings()
+effective_url = with_sslmode(settings.database_url, settings.database_sslmode)
+if effective_url:
+    config.set_main_option("sqlalchemy.url", effective_url.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

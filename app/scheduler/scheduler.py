@@ -5,13 +5,22 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.config import get_settings
 from app.jobs.retention import cleanup_expired_data
 from app.models.source import Source
 from app.scheduler.pipeline import trigger_pipeline_run
+from app.db_urls import async_to_sync, with_sslmode
 
 
 def _sync_database_url(async_url: str) -> str:
-    return async_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
+    return async_to_sync(async_url)
+
+
+def _effective_database_url(database_url: str | None) -> str | None:
+    if database_url is None:
+        return None
+    settings = get_settings()
+    return with_sslmode(database_url, settings.database_sslmode)
 
 
 class DocVersionScheduler:
@@ -20,7 +29,7 @@ class DocVersionScheduler:
         database_url: str | None = None,
         session_factory: async_sessionmaker[AsyncSession] | None = None,
     ) -> None:
-        self.database_url = database_url
+        self.database_url = _effective_database_url(database_url)
         self.session_factory = session_factory
         self._scheduler: AsyncIOScheduler | None = None
         self._jobs: dict[int, dict[str, Any]] = {}

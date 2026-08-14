@@ -10,13 +10,27 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import joinedload
 
 from app.config import get_settings
+from app.db_urls import with_sslmode
 from app.models.doc import Doc
 from app.models.source import Source
 
 
+def get_effective_database_url() -> str:
+    settings = get_settings()
+    return with_sslmode(settings.database_url, settings.database_sslmode)
+
+
 def create_engine() -> AsyncEngine:
     settings = get_settings()
-    return create_async_engine(settings.database_url, echo=settings.debug)
+    engine = create_async_engine(
+        get_effective_database_url(),
+        echo=settings.debug,
+        pool_size=settings.database_pool_size,
+        max_overflow=settings.database_max_overflow,
+        pool_pre_ping=True,
+        connect_args={"timeout": settings.database_connect_timeout_seconds},
+    )
+    return engine
 
 
 engine = create_engine()

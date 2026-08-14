@@ -54,6 +54,12 @@ def _free_port() -> int:
 
 @pytest.fixture(scope="session")
 def database_url() -> str:
+    external = os.environ.get("DOCVERSION_TEST_DATABASE_URL")
+    if external:
+        _run_alembic_for_url(external)
+        yield external
+        return
+
     if not POSTGRES_AVAILABLE:
         pytest.skip("PostgreSQL server binaries not found; DB tests skipped")
     base = Path("/tmp") / f"docversion-pg-{uuid.uuid4().hex[:8]}"
@@ -96,6 +102,19 @@ def database_url() -> str:
         check=True,
         capture_output=True,
     )
+    _run_alembic_for_url(url)
+    try:
+        yield url
+    finally:
+        subprocess.run(
+            [_pg_bin("pg_ctl"), "-D", str(data_dir), "stop", "-m", "fast"],
+            check=False,
+            capture_output=True,
+        )
+        shutil.rmtree(base, ignore_errors=True)
+
+
+def _run_alembic_for_url(url: str) -> None:
     env = {**os.environ, "DOCVERSION_DATABASE_URL": url}
     result = subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade", "head"],
@@ -107,15 +126,6 @@ def database_url() -> str:
         raise RuntimeError(
             f"alembic upgrade head failed:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
-    try:
-        yield url
-    finally:
-        subprocess.run(
-            [_pg_bin("pg_ctl"), "-D", str(data_dir), "stop", "-m", "fast"],
-            check=False,
-            capture_output=True,
-        )
-        shutil.rmtree(base, ignore_errors=True)
 
 
 @pytest.fixture()

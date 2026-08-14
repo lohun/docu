@@ -4,7 +4,8 @@
 - Design-only phase — no implementation exists. `design_spec.md` (repo root) is the authoritative design contract. Read it fully before writing backend code.
 - Backend scope: FastAPI API, APScheduler scheduler process, diff engine, NVIDIA LLM client, Python Playwright worker. React frontend is out of scope.
 - Deps: `requirements.txt` (currently only `fastapi`). Use `venv/` in repo root, not system Python.
-- Bare-metal deployment: no Docker/Kubernetes. Assume systemd units, Nginx reverse proxy, native PostgreSQL.
+- DB provider: **Supabase managed Postgres** (see `design_spec.md` §6.2). Connect via the Supavisor pooler (session mode, port 6543) with `DOCVERSION_DATABASE_SSLMODE=require`; `app/db_urls.py` derives the sync psycopg2 URL (scheduler jobstore) from `DOCVERSION_DATABASE_URL` and applies SSL per driver. Free tier has no PITR — nightly `scripts/backup_db.sh` plus `scripts/db_heartbeat.sh` on a timer are required ops.
+- Bare-metal deployment: no Docker/Kubernetes. Assume systemd units, Nginx reverse proxy, Playwright browser binaries on the host. Postgres itself is hosted (Supabase), not a local service.
 
 ## Tenancy (non-negotiable)
 - Org is the top-level tenant boundary; per-org roles `owner|admin|member|viewer`.
@@ -22,7 +23,7 @@
 - Per-source lock to prevent overlapping runs; write a `run_logs` row per run.
 
 ## Data model rules
-- Alembic for all schema changes; migration files committed with models, each with a tested `downgrade()`. `alembic upgrade head` is an explicit pre-start deploy step.
+- Alembic for all schema changes; migration files committed with models, each with a tested `downgrade()`. `alembic upgrade head` is an explicit pre-start deploy step. Migrations run against whatever `DOCVERSION_DATABASE_URL` points at (Supabase pooler in prod/staging; a local PG for dev).
 - `snapshots.raw_storage_ref` = file path on disk (e.g. `/var/lib/docversion/snapshots/{id}.raw`) — never store raw HTML/spec blobs in Postgres.
 - `docs.current_content_md` is the materialized "latest" view; `doc_updates` is the append-only audit trail. Never recompute history from diffs.
 - Indexes required: `(source_id, fetched_at desc)` on snapshots, `(org_id, updated_at desc)` on docs.
