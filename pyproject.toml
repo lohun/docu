@@ -1,14 +1,28 @@
-[build-system]
-requires = ["setuptools>=61.0.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "docu"
 version = "0.1.0"
-dynamic = ["dependencies"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = [
+    "alembic>=1.19.1",
+    "apscheduler>=3.11.3",
+    "asyncpg>=0.31.0",
+    "beautifulsoup4>=4.15.0",
+    "cryptography>=50.0.0",
+    "email-validator>=2.3.0",
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "openai>=3.1.0",
+    "passlib[argon2]>=1.7.4",
+    "psycopg2-binary>=2.9.12",
+    "pydantic-settings>=2.15.0",
+    "pyjwt>=2.13.0",
+    "pytest>=9.1.1",
+    "pytest-playwright>=0.9.0",
+    "pyyaml>=6.0.3",
+    "slowapi>=0.1.10",
+    "sqlalchemy[asyncio]>=2.0.52",
+    "uvicorn[standard]>=0.52.3",
+    "vercel>=0.10.0",
+]
 
 
 [tool.pytest.ini_options]
