@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 origins = [
     "http://localhost:8080",      # React local development
     "http://localhost:5173",      # Vite local development
-    "https://yourfrontend.com",   # Production domain
+    "https://api-monitor-hub.vercel.app",   # Production domain
 ]
 
 
