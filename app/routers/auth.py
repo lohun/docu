@@ -87,7 +87,11 @@ async def register(
         user = await register_user(session, payload.email, payload.password)
     except EmailAlreadyRegisteredError:
         raise HTTPException(status_code=409, detail="email already registered")
-    await issue_verification(session, user)
+    try:
+        await issue_verification(session, user)
+    except Exception as e:
+        logger.error(f"Failed to send verification email: {e}")
+        raise HTTPException(status_code=500, detail="failed to send verification email")
     return RegisterResponse(
         user=UserOut(id=user.id, email=user.email),
         message="verification email sent",
