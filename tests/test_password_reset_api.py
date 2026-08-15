@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from tests.test_auth_api import _register_verified
+from tests.test_auth_api import _refresh_cookie_headers, _register_verified
 
 
 @pytest.mark.anyio
@@ -100,5 +100,5 @@ async def test_password_reset_rotates_sessions_out(client, session_factory, monk
         json={"token": token, "new_password": "changed-password"},
     )
 
-    refresh_resp = await client.post("/auth/refresh", headers={"Cookie": f"refresh_token={old_refresh}"})
+    refresh_resp = await client.post("/auth/refresh", headers=await _refresh_cookie_headers(client, old_refresh))
     assert refresh_resp.status_code == 401

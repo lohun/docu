@@ -2,6 +2,34 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+from app.config import get_settings
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Set progressive hardening headers on every response.
+
+    HSTS is only emitted outside development (browsers ignore it on plain http
+    anyway). Auth responses must never be cached by shared/proxy caches.
+    """
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        settings = get_settings()
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        if not settings.is_development:
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
+        if request.url.path.startswith("/auth/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)

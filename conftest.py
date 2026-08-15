@@ -3,9 +3,17 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 from collections.abc import AsyncIterator
+
+# Route settings away from the developer's local .env (which may point at a
+# production database/secret). Tests must be hermetic and deterministic.
+_empty_env = tempfile.NamedTemporaryFile(
+    prefix="docversion-test-env-", suffix=".env", dir="/tmp"
+)
+os.environ["DOCVERSION_ENV_FILE"] = _empty_env.name
 
 import httpx
 import pytest
@@ -13,9 +21,44 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
+from app.csrf import csrf_cookie_name
 from app.db import get_session
 from app.main import create_app
 from app.rate_limit import limiter
+
+STATE_CHANGING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+
+
+class CSRFClient(httpx.AsyncClient):
+    """httpx client that mirrors the real SPA.
+
+    Before the first state-changing request it performs the ``GET /auth/csrf``
+    handshake (as the frontend does on load) then echoes the cookie value as the
+    ``X-CSRF-Token`` header on every subsequent state-changing request.
+    """
+
+    async def send(
+        self, request: httpx.Request, *args: object, **kwargs: object
+    ) -> httpx.Response:
+        if request.method.upper() in STATE_CHANGING_METHODS:
+            # A fully-crafted request (explicit X-CSRF-Token) is sent as-is.
+            if "x-csrf-token" in request.headers:
+                return await super().send(request, *args, **kwargs)
+            token = self.cookies.get(csrf_cookie_name())
+            if token is None:
+                handshake = self.build_request("GET", "/auth/csrf")
+                await super().send(handshake)
+                token = self.cookies.get(csrf_cookie_name())
+            # send() forwards the request as-is. If the Cookie header predates
+            # the handshake it won't carry the csrf cookie yet, and
+            # set_cookie_header refuses to overwrite an existing header, so
+            # recompute from the jar when the csrf cookie isn't present.
+            if csrf_cookie_name() not in request.headers.get("cookie", ""):
+                request.headers.pop("cookie", None)
+                self.cookies.set_cookie_header(request)
+            if token and "x-csrf-token" not in request.headers:
+                request.headers["x-csrf-token"] = token
+        return await super().send(request, *args, **kwargs)
 
 PG_SYS_DIR = Path("/usr/lib/postgresql")
 PG_BIN_DIRS = sorted(PG_SYS_DIR.glob("*/bin")) if PG_SYS_DIR.exists() else []
@@ -48,7 +91,7 @@ ALL_TABLES = (
 
 def _free_port() -> int:
     with socket.socket() as s:
-        # s.bind(("127.0.0.1", 0))
+        s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
 
 
@@ -156,6 +199,6 @@ async def client(session_factory) -> AsyncIterator[httpx.AsyncClient]:
 
     app.dependency_overrides[get_session] = override_get_session
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+    async with CSRFClient(transport=transport, base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()

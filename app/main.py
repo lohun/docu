@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from app.config import get_settings
+from app.config import get_settings, validate_settings
+from app.csrf import CSRFMiddleware
 from app.db import database_is_ready
 from app.logging_conf import setup_logging
 from app.rate_limit import limiter
@@ -15,19 +16,14 @@ from app.routers.auth import router as auth_router
 from app.routers.docs import router as docs_router
 from app.routers.memberships import router as memberships_router
 from app.routers.sources import router as sources_router
+from app.security import SecurityHeadersMiddleware
 
 logger = logging.getLogger(__name__)
 
 
-origins = [
-    "http://localhost:8080",      # React local development
-    "http://localhost:5173",      # Vite local development
-    "https://api-monitor-hub.vercel.app",   # Production domain
-]
-
-
 def create_app() -> FastAPI:
     settings = get_settings()
+    validate_settings(settings)
     setup_logging(settings.log_level)
 
     app = FastAPI(title=settings.app_name, debug=settings.debug)
@@ -36,12 +32,15 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,           # Allow specific origins
-        allow_credentials=True,          # Support cookies/authentication headers
-        allow_methods=["*"],             # Allow all HTTP methods (GET, POST, etc.)
-        allow_headers=["*"],             # Allow all request headers
+        allow_origins=settings.cors_origin_list,
+        allow_credentials=True,  # Support cookies/authentication headers
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
-
+    # Order of registration => middleware execution order (last added outermost):
+    # SecurityHeaders (headers on every response) -> CSRF -> CORS -> app.
+    app.add_middleware(CSRFMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request, exc) -> JSONResponse:
@@ -54,7 +53,7 @@ def create_app() -> FastAPI:
     async def startup_event():
         """Validate and create storage directories on startup."""
         settings = get_settings()
-        
+
         # Validate snapshot storage directory
         snapshot_dir = Path(settings.snapshot_storage_dir).resolve()
         try:
@@ -86,9 +85,9 @@ def create_app() -> FastAPI:
 
     @app.get("/")
     def root() -> dict[str, str]:
+        # environment deliberately omitted: minor but avoidable info disclosure
         return {
             "app": settings.app_name,
-            "environment": settings.environment,
         }
 
     @app.get("/health")

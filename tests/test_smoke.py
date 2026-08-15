@@ -10,7 +10,8 @@ def test_app_metadata() -> None:
     assert resp.status_code == 200
     data = resp.json()
     assert data["app"] == "docversion"
-    assert data["environment"] == "development"
+    # environment deliberately not exposed on the root route
+    assert "environment" not in data
 
 
 def test_settings_defaults() -> None:

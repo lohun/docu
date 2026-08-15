@@ -29,6 +29,7 @@ def _make_production_app() -> FastAPI:
 async def test_error_responses_do_not_leak_stack_traces_in_production(monkeypatch) -> None:
     monkeypatch.setenv("DOCVERSION_ENVIRONMENT", "production")
     monkeypatch.setenv("DOCVERSION_DEBUG", "false")
+    monkeypatch.setenv("DOCVERSION_JWT_SECRET_KEY", "a-strong-production-secret-that-is-long-enough")
     get_settings.cache_clear()
     try:
         app = _make_production_app()
@@ -77,7 +78,7 @@ def test_logs_redact_secrets() -> None:
 async def test_run_now_rate_limit_per_org_not_global(
     client, session_factory, monkeypatch
 ) -> None:
-    async def noop(session, source_id):
+    async def noop(session, source_id, **kwargs):
         from app.models.run_log import RunLog
 
         session.add(RunLog(source_id=source_id, outcome="success"))

@@ -4,16 +4,14 @@ from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyCookie
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.cookies import access_cookie_name
 from app.auth.service import OrgAccessError, check_role_sufficient, verify_org_access
 from app.auth.tokens import decode_access_token
 from app.db import get_session
 from app.models.organization import Organization
 from app.models.user import User
 
-ACCESS_TOKEN_COOKIE = "access_token"
-
-# auto_error=False so we can raise 401 (not 403) when the cookie is absent
-cookie_scheme = APIKeyCookie(name=ACCESS_TOKEN_COOKIE, auto_error=False)
+cookie_scheme = APIKeyCookie(name=access_cookie_name(), auto_error=False)
 
 Role = Literal["owner", "admin", "member", "viewer"]
 
@@ -34,7 +32,12 @@ async def get_current_user(
     user = await session.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=401, detail="user not found")
-    
+
+    # token_version bounds the access token to the latest auth epoch. Any bump
+    # (password change/disable) immediately invalidates previously issued JWTs.
+    if payload.get("ver", 1) != user.token_version:
+        raise HTTPException(status_code=401, detail="session token is stale; please log in again")
+
     if not user.is_active:
         raise HTTPException(status_code=403, detail="account is disabled")
     

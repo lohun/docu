@@ -4,7 +4,23 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from sqlalchemy import select
 
+from app.csrf import csrf_cookie_name
 from app.models.user import User
+
+
+async def _refresh_cookie_headers(client, refresh_token: str) -> dict[str, str]:
+    """Send the refresh cookie explicitly, mirroring a stolen-token replay.
+
+    Includes the CSRF cookie/header so the request is otherwise well-formed.
+    """
+    csrf = client.cookies.get(csrf_cookie_name())
+    if csrf is None:
+        await client.get("/auth/csrf")
+        csrf = client.cookies.get(csrf_cookie_name())
+    return {
+        "Cookie": f"refresh_token={refresh_token}; {csrf_cookie_name()}={csrf}",
+        "X-CSRF-Token": csrf,
+    }
 
 
 @pytest.mark.anyio
@@ -216,7 +232,7 @@ async def test_refresh_rejects_old_token_after_rotation(client, session_factory)
     first = await client.post("/auth/refresh")
     assert first.status_code == 200
 
-    resp = await client.post("/auth/refresh", headers={"Cookie": f"refresh_token={old_refresh}"})
+    resp = await client.post("/auth/refresh", headers=await _refresh_cookie_headers(client, old_refresh))
     assert resp.status_code == 401
 
 
@@ -229,7 +245,7 @@ async def test_refresh_missing_cookie_returns_401(client) -> None:
 
 @pytest.mark.anyio
 async def test_refresh_garbage_cookie_returns_401(client) -> None:
-    resp = await client.post("/auth/refresh", headers={"Cookie": "refresh_token=garbage"})
+    resp = await client.post("/auth/refresh", headers=await _refresh_cookie_headers(client, "garbage"))
     assert resp.status_code == 401
     assert resp.json()["detail"] == "invalid or expired refresh token"
 

@@ -180,6 +180,8 @@ async def reset_password(session: AsyncSession, token: str, new_password: str) -
     user.password_hash = hash_password(new_password)
     user.password_reset_token_hash = None
     user.password_reset_token_expires_at = None
+    # Invalidate every outstanding access token and refresh session.
+    user.token_version = user.token_version + 1
     await session.execute(delete(RefreshToken).where(RefreshToken.user_id == user.id))
     await session.commit()
     return user

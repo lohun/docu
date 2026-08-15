@@ -64,6 +64,7 @@ async def test_reset_password_updates_hash_and_is_single_use(session_factory, mo
 
         user = await register_user(session, "bob@example.com", "old-password")
         await request_password_reset(session, "bob@example.com")
+        original_version = user.token_version
 
     token = parse_qs(urlparse(captured["link"]).query)["token"][0]
 
@@ -74,6 +75,7 @@ async def test_reset_password_updates_hash_and_is_single_use(session_factory, mo
         assert verify_password("new-password", updated.password_hash)
         assert not verify_password("old-password", updated.password_hash)
         assert updated.password_reset_token_hash is None
+        assert updated.token_version == original_version + 1
 
         assert await reset_password(session, token, "another-password") is None
 

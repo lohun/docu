@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Identity, String, func, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Identity, Integer, String, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, PKMixin
@@ -11,6 +11,13 @@ class User(PKMixin, Base):
 
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Increment to invalidate every outstanding access JWT (password change,
+    # account disable). Bound to the `ver` claim at decode time.
+    token_version: Mapped[int] = mapped_column(
+        Integer,
+        server_default=text("1"),
+        nullable=False,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
