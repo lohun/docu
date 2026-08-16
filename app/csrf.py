@@ -55,15 +55,17 @@ def validate_csrf_value(value: str | None) -> bool:
 
 def set_csrf_cookie(response: Response) -> None:
     settings = get_settings()
+    token = issue_csrf_value()
     response.set_cookie(
         key=csrf_cookie_name(),
-        value=issue_csrf_value(),
+        value=token,
         httponly=False,  # JS must read it to echo back as the header
         secure=settings.cookie_secure_enabled,
         samesite=settings.cookie_samesite_value,
         path="/",
         max_age=settings.refresh_token_expire_days * 86400,
     )
+    return token
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):

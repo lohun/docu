@@ -30,7 +30,7 @@ def create_app() -> FastAPI:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-
+    app.add_middleware(CSRFMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
@@ -38,9 +38,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    # Order of registration => middleware execution order (last added outermost):
-    # SecurityHeaders (headers on every response) -> CSRF -> CORS -> app.
-    app.add_middleware(CSRFMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
 
     @app.exception_handler(Exception)

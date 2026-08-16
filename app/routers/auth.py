@@ -100,8 +100,8 @@ async def csrf_token(response: Response) -> dict[str, str]:
     The SPA must call this (e.g. on load) before issuing any state-changing
     request and echo the cookie value in the ``X-CSRF-Token`` header.
     """
-    set_csrf_cookie(response)
-    return {"status": "csrf_token_issued"}
+    token = set_csrf_cookie(response)
+    return {"status": "csrf_token_issued", "csrf_token": token}
 
 
 @router.post("/register", status_code=201, response_model=RegisterResponse)
