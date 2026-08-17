@@ -158,7 +158,8 @@ async def run_source_now(
     # Enqueue pipeline run (will be integrated with scheduler/pipeline service)
     try:
         from app.scheduler.pipeline import trigger_pipeline_run
-        force_initial_doc = doc is None
+        force_initial_doc = (doc is None or doc.current_content_md == "")
+        print(force_initial_doc)
         await trigger_pipeline_run(session, source.id, force_initial_doc=force_initial_doc)
     except ImportError:
         pass  # Pipeline placeholder until scheduler module lands
