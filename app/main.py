@@ -49,20 +49,27 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     async def startup_event():
-        """Validate and create storage directories on startup."""
+        """Validate and create storage directories on startup.
+
+        The local disk snapshot dir is only needed for the ``local`` backend;
+        the ``cloudinary`` backend requires DOCVERSION_CLOUDINARY_URL (enforced
+        by validate_settings in production) and manages its own storage. The git
+        export working dir is always local — git needs a real checkout.
+        """
         settings = get_settings()
 
-        # Validate snapshot storage directory
-        snapshot_dir = Path(settings.snapshot_storage_dir).resolve()
-        try:
-            snapshot_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(f"Snapshot storage directory: {snapshot_dir}")
-        except PermissionError as e:
-            logger.error(f"Permission denied creating snapshot directory {snapshot_dir}: {e}")
-            raise
-        except OSError as e:
-            logger.error(f"Failed to create snapshot directory {snapshot_dir}: {e}")
-            raise
+        # Validate snapshot storage directory (local backend only)
+        if settings.storage_backend != "cloudinary":
+            snapshot_dir = Path(settings.snapshot_storage_dir).resolve()
+            try:
+                snapshot_dir.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Snapshot storage directory: {snapshot_dir}")
+            except PermissionError as e:
+                logger.error(f"Permission denied creating snapshot directory {snapshot_dir}: {e}")
+                raise
+            except OSError as e:
+                logger.error(f"Failed to create snapshot directory {snapshot_dir}: {e}")
+                raise
 
         # Validate git export directory
         git_dir = Path(settings.git_export_base_dir).resolve()

@@ -6,7 +6,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import compute_content_hash, get_adapter
-from app.config import get_settings
 from app.diff import get_diff_engine
 from app.llm.client import LLMClient
 from app.llm.metering import get_period_usage, increment_usage, is_over_quota
@@ -19,7 +18,7 @@ from app.models.snapshot import Snapshot
 from app.models.source import Source
 from app.publish.db_publish import publish_initial_doc, publish_to_db, resolve_doc
 from app.publish.git_export import GitExportError, export_doc_to_git
-from app.storage.snapshot_store import SnapshotStore
+from app.storage import SnapshotStore, get_snapshot_store
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +68,9 @@ async def _persist_snapshot(
     await session.flush()
     snapshot.raw_storage_ref = store.write_raw(snapshot.id, raw_bytes)
     if screenshot:
-        store.write_raw(snapshot.id, screenshot, suffix="png")
+        snapshot.screenshot_storage_ref = store.write_raw(
+            snapshot.id, screenshot, suffix="png"
+        )
     return snapshot
 
 
@@ -229,8 +230,7 @@ async def _execute_pipeline(session: AsyncSession, source: Source, force_initial
 
     latest = await _get_latest_snapshot(session, source.id)
 
-    settings = get_settings()
-    store = SnapshotStore(settings.snapshot_storage_dir)
+    store = get_snapshot_store()
     new_snapshot = await _persist_snapshot(
         session,
         source.id,

@@ -169,3 +169,50 @@ async def test_pipeline_selects_adapter_by_source_type(
             await trigger_pipeline_run(session, source.id)
 
         assert selected == ["openapi", "scrape", "webapp"]
+
+
+class _ScreenshotAdapter:
+    def __init__(self, content: str) -> None:
+        self.content = content
+        self.screenshot = b"\x89PNG-screenshot"
+
+    async def fetch(self, source: Source) -> AdapterResult:
+        return AdapterResult(
+            normalized=self.content,
+            raw_bytes=self.content.encode("utf-8"),
+            excerpt=self.content[:2048],
+            screenshot=self.screenshot,
+        )
+
+
+@pytest.mark.anyio
+async def test_pipeline_persists_screenshot_ref(
+    session_factory, snapshot_dir, monkeypatch
+) -> None:
+    monkeypatch.setattr(pipeline_module, "get_adapter", lambda _t: _ScreenshotAdapter("page"))
+
+    async with session_factory() as session:
+        org = Organization(name="Screenshot Org", slug="screenshot-org")
+        session.add(org)
+        await session.flush()
+
+        source = Source(
+            org_id=org.id,
+            name="Screenshot Source",
+            type="scrape",
+            target_url="https://example.com/page",
+            is_active=True,
+        )
+        session.add(source)
+        await session.commit()
+
+        await trigger_pipeline_run(session, source.id)
+
+        snapshot = await session.scalar(
+            select(Snapshot).where(Snapshot.source_id == source.id)
+        )
+        assert snapshot is not None
+        assert snapshot.raw_storage_ref.endswith(".raw")
+        assert snapshot.screenshot_storage_ref is not None
+        assert snapshot.screenshot_storage_ref.endswith(".png")
+        assert (snapshot_dir / f"{snapshot.id}.png").exists()

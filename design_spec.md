@@ -156,7 +156,7 @@ The system runs on PostgreSQL provided by **Supabase** (managed hosting) rather 
 - **Rollback:** because the app talks only via `DOCVERSION_DATABASE_URL`, switching provider is a config change — point the env var back at a local Postgres and nothing else changes.
 
 **Design notes:**
-- `snapshots.raw_storage_ref` points to a file path on disk (e.g. `/var/lib/docversion/snapshots/{id}.raw`) rather than storing large raw HTML/spec blobs directly in Postgres — keeps the DB lean; only the normalized excerpt and hash live in-row for querying.
+- `snapshots.raw_storage_ref` and `snapshots.screenshot_storage_ref` point at **Cloudinary-managed private assets** (public IDs like `snapshots/{id}.raw` / `snapshots/{id}.png`) rather than storing large raw HTML/spec blobs in Postgres — keeps the DB lean; only the normalized excerpt and hash live in-row for querying. Access goes through the `app.storage` backend abstraction (`SnapshotStore` protocol), so the scheduler and diff engines stay storage-agnostic. Snapshot blobs are never on the public CDN (`type="private"`); `read_raw` fetches them via a signed private-download URL.
 - `diffs.diff_payload` as JSONB lets you store oasdiff's structured changelog or a text-diff payload uniformly.
 - `doc_updates` is an append-only audit trail; `docs.current_content_md` is the materialized "latest" view the frontend reads. This separation lets you show full history without recomputing it from diffs each time.
 - Add a Postgres index on `(source_id, fetched_at desc)` for snapshots and `(org_id, updated_at desc)` for docs — these are the hot query paths for the dashboard.
@@ -245,7 +245,7 @@ Publish target is **both** database-backed and git-export, not either/or:
 - Used for: (a) third-party sites with no API, and (b) internal web apps without an exposed build manifest.
 - Runs as **Python Playwright** (not the Node variant) inside the scheduler process's worker pool, using `chromium` headless.
 - **Normalization before hashing** is the most important part of this component — strip `<script>`, ads/analytics blocks, timestamps, and session-specific attributes; support an optional per-source CSS selector (`sources.css_scope_selector`) so orgs can scope hashing/diffing to just the content region that matters (e.g. `#api-reference`), avoiding false positives from unrelated page churn.
-- Each scrape stores a full-page screenshot alongside the text extract (`raw_storage_ref`) — useful for a human spot-checking a diff later even though there's no approval gate in the publish flow.
+- Each scrape stores a full-page screenshot alongside the text extract (`screenshot_storage_ref`) — useful for a human spot-checking a diff later even though there's no approval gate in the publish flow.
 - Respect `robots.txt` and reasonable rate limits for third-party sources; this should be a per-source configurable politeness delay, not hardcoded, since orgs will scrape a mix of their own and external sites with different tolerances.
 - Browser binaries (`playwright install chromium`) must be provisioned as part of host setup, not per-request — document this explicitly in deployment steps since it's a common bare-metal setup gap.
 
@@ -271,7 +271,9 @@ No Docker/Kubernetes — all services installed directly on the host.
 
 **Secrets:** environment file (`/etc/docversion/.env`, file-permission-restricted) for the Supabase DB URL, JWT signing secret, and the Fernet master key used to encrypt org NVIDIA API keys — never in source control.
 
-**Backups:** the DB is the sole source of truth for everything except raw snapshot blobs on disk (which should be backed up too, or treated as regenerable/non-critical). Free-tier Supabase has no PITR, so run `scripts/backup_db.sh` nightly via a `systemd` timer/cron (custom-format `pg_dump` to local disk, pruned after N days); Supabase-managed backups are additional if the project is upgraded.
+**Backups:** the DB is the sole source of truth for everything except raw snapshot blobs, which live in Cloudinary (managed object storage — Cloudinary handles durability/backup of those assets, so `backup_db.sh` only needs to cover Postgres). Git-export mirrors are also stored in Cloudinary (public raw `.md` assets) alongside the real git push. Free-tier Supabase has no PITR, so run `scripts/backup_db.sh` nightly via a `systemd` timer/cron (custom-format `pg_dump` to local disk, pruned after N days); Supabase-managed backups are additional if the project is upgraded.
+
+**Storage backend:** controlled by `DOCVERSION_STORAGE_BACKEND` (`local` = filesystem under `snapshot_storage_dir`, for dev/tests; `cloudinary` = production, requires `DOCVERSION_CLOUDINARY_URL`). `validate_settings()` hard-fails in production if the backend is `cloudinary` without a URL. One-off backfill from local disk: `scripts/migrate_snapshots_to_cloudinary.py` (preview unless `--commit`).
 
 ---
 

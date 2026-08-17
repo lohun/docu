@@ -14,6 +14,10 @@ _empty_env = tempfile.NamedTemporaryFile(
     prefix="docversion-test-env-", suffix=".env", dir="/tmp"
 )
 os.environ["DOCVERSION_ENV_FILE"] = _empty_env.name
+# Storage backend control surfaces are exercised through the CloudinaryStore
+# unit tests; the integration suite stays on the local-disk backend so it runs
+# without Cloudinary credentials (see app/storage/__init__.py).
+os.environ["DOCVERSION_STORAGE_BACKEND"] = "local"
 
 import httpx
 import pytest

@@ -23,16 +23,19 @@ async def test_alembic_upgrade_head_then_downgrade_minus_one(database_url: str) 
         assert result.returncode == 0, f"alembic {args} failed:\n{result.stdout}\n{result.stderr}"
         return result
 
+    current_head = run_alembic("heads").stdout.split()[0]
+    assert current_head, "no alembic head found"
+
     run_alembic("downgrade", "-1")
 
     current = run_alembic("current")
-    assert "fe69f7664515" in current.stdout
-    assert "0006" not in current.stdout
+    assert current_head not in current.stdout
+    assert "0006" in current.stdout
 
     run_alembic("upgrade", "head")
 
     current = run_alembic("current")
-    assert "0006" in current.stdout
+    assert current_head in current.stdout
 
     engine = create_async_engine(database_url)
     try:

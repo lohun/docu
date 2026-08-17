@@ -48,12 +48,14 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
     snapshot_storage_dir: str = "./snapshots"
     git_export_base_dir: str = "./git-exports"
+    storage_backend: str = "local"
+    cloudinary_url: str = ""
     fernet_master_key: str = ""
     nvidia_api_key: str = ""
     nvidia_api_key_encrypted: str = ""
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     nvidia_model: str = "meta/llama-3.3-70b-instruct"
-    llm_call_timeout_seconds: int = 60
+    llm_call_timeout_seconds: int = 300
     llm_rate_per_minute: int = 10
     scrape_timeout_seconds: int = 30
     DOCVERSION_ENV_FILE: str = ".env"
@@ -107,6 +109,11 @@ def validate_settings(settings: Settings) -> None:
         raise RuntimeError(
             "production requires Secure cookies (DOCVERSION_COOKIE_SECURE must "
             "not be explicitly false)"
+        )
+    if settings.storage_backend == "cloudinary" and not settings.cloudinary_url:
+        raise RuntimeError(
+            "production with DOCVERSION_STORAGE_BACKEND=cloudinary requires "
+            "DOCVERSION_CLOUDINARY_URL"
         )
 
 

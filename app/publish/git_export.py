@@ -34,6 +34,28 @@ def _ensure_repo(export_dir: Path, remote_url: str | None) -> None:
             _run_git(export_dir, "remote", "add", "origin", remote_url)
 
 
+def _mirror_md_to_cloudinary(org_slug: str, doc_slug: str, content: str) -> str | None:
+    """Mirror an exported doc to Cloudinary as a public raw asset (best-effort).
+
+    Returns the CDN delivery URL, or None when Cloudinary isn't configured.
+    Failures are logged and swallowed — this mirror is optional and must never
+    block the git export or the authoritative DB publish.
+    """
+    settings = get_settings()
+    if not settings.cloudinary_url:
+        return None
+    try:
+        from app.storage.cloudinary_store import CloudinaryStore
+
+        store = CloudinaryStore(settings.cloudinary_url)
+        url = store.write_public_md(org_slug, doc_slug, content)
+        logger.info("mirrored doc %s to Cloudinary (%s)", doc_slug, url)
+        return url
+    except Exception as e:
+        logger.error("Cloudinary mirror failed for doc %s: %s", doc_slug, e)
+        return None
+
+
 def export_doc_to_git(
     doc: Doc,
     org_slug: str,
@@ -67,4 +89,6 @@ def export_doc_to_git(
     sha = _run_git(export_dir, "rev-parse", "HEAD")
     doc.last_git_export_commit = sha
     logger.info("exported doc %s to git export (%s)", doc.slug, sha)
+
+    _mirror_md_to_cloudinary(org_slug, doc.slug, doc.current_content_md)
     return sha

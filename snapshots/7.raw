@@ -1,0 +1,360 @@
+--- Page: https://cyberplug.cc/ ---
+CyberPlug — Map once. Comply everywhere.
+CyberPlug is backed by
+MEST
+Learn more
+Platform
+How it works
+About
+Book a demo
+CyberPlug connects to your stack and maps your security controls to every framework your regulators require, local and international.
+Book a demo
+See how it works
+Frameworks mapped
+Native integrations
+Continuous monitoring
+mapping engine
+scanning
+mapped
+mapped
+mapped
+One control library, mapped across every framework you answer to.
+01
+One scan covers every regulator. Each finding is mapped across all of your active frameworks at once, so a single fix earns credit wherever the control overlaps.
+02
+Findings are ranked by the licence risk they carry, so your team fixes what your regulator cares about first.
+03
+Most scanner output never blocks an audit. CyberPlug filters it down to the handful of findings that do, and your team spends its time fixing instead of triaging.
+04
+CyberPlug pulls fresh evidence from your systems on a schedule and keeps each item linked to the controls it satisfies, ready to hand to any auditor.
+05
+Controls are re-checked around the clock. Drift and expirations are caught long before your next audit window.
+06
+Export a formatted audit package for each active framework, scoped to exactly what that inspector needs to see.
+MFA enforcement
+—
+Data localisation
+—
+—
+Transaction alerts
+—
+Vendor assessments
+—
+—
+1 fix earns credit across 2 frameworks
+!
+AML monitoring gap
+!
+MFA not enforced
+Data residency policy
+Vendor assessments
+247 alerts
+!
+AML gap
+!
+MFA gap
+!
+DR policy
+3 critical
+AWS CloudTrail
+Daily
+1h ago
+✓
+Okta access logs
+Daily
+1h ago
+✓
+Vuln scan report
+Weekly
+6h ago
+✓
+Vendor assessments
+Monthly
+2d ago
+✓
+Next collection
+in 22 hours
+Live
+MFA enforced
+Passing
+Encryption at rest
+Passing
+Access reviews
+Passing
+AML monitoring
+Drift · 3h ago
+DR policy
+Passing
+Data residency
+Passing
+ISO 27001
+47
+controls
+Ready
+PCI-DSS
+23
+controls
+Ready
+SOC 2
+31
+controls
+Ready
+Export all packages →
+Connect your stack and watch your compliance map build itself.
+1
+Link your cloud, identity, code and HR sources in minutes. No agents, no spreadsheets. CyberPlug reads your infrastructure and your team never shares credentials.
+40+ native integrations
+Read-only, least-privilege access
+AWS
+Okta
+GitHub
+Postgres
+Slack
+GCP
+2
+Every finding is mapped to your active frameworks automatically. One fix earns compliance credit across every regime you're held to.
+One control library, every regime
+Local and international frameworks, side-by-side
+MFA enforcement
+ISO 27001
+SOC 2
+Data localisation
+GDPR
+ISO 27001
+Transaction alerts
+PCI-DSS
+NIST CSF
+3
+Gaps are ranked by the licence risk they carry rather than raw severity score, and each one is routed to an owner with a concrete fix.
+Risk-ranked, owner-routed
+Caught before your audit window
+MFA on admin portals
+Passing
+Data residency policy on file
+Passing
+!
+AML transaction monitoring
+Licence risk
+4
+Export inspector-ready evidence packages for each active framework in a single click. Share a live trust profile with any stakeholder.
+One-click audit exports
+Always-current trust profile
+Trust profile
+Live
+ISO 27001
+91
+%
+PCI-DSS
+78
+%
+GDPR
+87
+%
+SOC 2
+94
+%
+Share report
+Map your controls to every framework your regulators require and see exactly what needs fixing before the inspector arrives.
+Book a demo
+Explore the platform
+Compliance intelligence for regulated industries. Map your controls to every framework you’re held to and know exactly where you stand.
+ISO 27001
+PCI-DSS
+SOC 2
+Platform
+Frameworks
+Integrations
+Trust profile
+Book a demo
+ISO 27001
+ISO 42001
+PCI-DSS
+GDPR
+NIST CSF
+About
+FAQ
+Contact
+©
+2026
+CyberPlug. All rights reserved.
+Privacy Policy
+Terms of Service
+How it works
+Book a demo
+
+--- Page: https://cyberplug.cc/about ---
+About CyberPlug
+Platform
+How it works
+About
+Book a demo
+CyberPlug connects to your stack and maps your security controls to every framework your regulators expect, both local and international. You map your controls once and stay aligned across ISO 27001, ISO 42001, PCI-DSS, GDPR, NIST CSF and more, instead of rebuilding evidence from scratch for every audit.
+By the time an audit lands, your evidence is already gathered and up to date. We are a team of engineers, operators and compliance specialists who want to make trust automatic, so regulated teams can move fast without losing the paper trail.
+A small, focused leadership team spanning product, business, engineering and AI.
+Team Lead
+Business Lead
+Tech Lead
+AI Lead
+The basics on what CyberPlug does and how to get going.
+CyberPlug connects to the tools you already use and maps your security controls to the frameworks you answer to. Instead of chasing screenshots and spreadsheets before every audit, you get one live picture of where you stand and what still needs work.
+We map your controls across ISO 27001, ISO 42001, PCI-DSS, GDPR, NIST CSF and SOC 2, alongside the local regulations your business is held to. Map a control once and it counts everywhere it applies.
+CyberPlug plugs into your cloud, identity and security tools through read-only integrations. It pulls the evidence it needs in the background, so your team keeps working the way it already does.
+Most teams are connected and seeing their first control coverage within days, not months. You start with the frameworks that matter most and expand from there at your own pace.
+Security is the product, so we hold ourselves to the same bar we help you reach. Integrations are scoped to read-only access, data is encrypted in transit and at rest, and we only collect what is needed to assess your controls.
+Book a demo and we will walk you through how CyberPlug fits your stack and your frameworks. You can also reach us any time at
+[email protected]
+.
+Questions, partnerships, or support: reach our team at one address and we will point it to the right person.
+[email protected]
+Ready to see it?
+Book a demo
+.
+Compliance intelligence for regulated industries. Map your controls to every framework you’re held to and know exactly where you stand.
+ISO 27001
+PCI-DSS
+SOC 2
+Platform
+Frameworks
+Integrations
+Trust profile
+Book a demo
+ISO 27001
+ISO 42001
+PCI-DSS
+GDPR
+NIST CSF
+About
+FAQ
+Contact
+©
+2026
+CyberPlug. All rights reserved.
+Privacy Policy
+Terms of Service
+How it works
+Book a demo
+
+--- Page: https://cyberplug.cc/demo ---
+CyberPlug — Map once. Comply everywhere.
+← Back to home
+See how CyberPlug maps your controls to every framework you’re held to. Tell us a bit about you and we’ll be in touch.
+Name
+Work email
+Company
+What would you like to discuss?
+(optional)
+Company website
+Request demo
+By submitting, you agree to be contacted about CyberPlug. We’ll never share your details.
+
+--- Page: https://cyberplug.cc/privacy ---
+Privacy Policy — CyberPlug
+Platform
+How it works
+About
+Book a demo
+Last updated:
+July 29, 2026
+This Privacy Policy explains how CyberPlug collects, uses, and protects your information when you use our website and platform.
+We collect information you provide directly to us, information collected automatically when you use our services, and information from the systems you connect to CyberPlug.
+Account and contact details: name, work email, company, and role.
+Demo and enquiry information: anything you submit when you request a demo or contact us.
+Usage data: log data, device and browser information, and how you interact with our website and platform.
+Connected-system data: read-only configuration and evidence data pulled from the cloud, identity, and security tools you choose to integrate.
+We use the information we collect to operate, maintain, and improve CyberPlug, and to communicate with you.
+Provide the platform, map your controls, and generate compliance evidence.
+Respond to demo requests, support enquiries, and other communications.
+Monitor, secure, and improve our services.
+Comply with legal obligations and enforce our agreements.
+Where the GDPR or similar laws apply, we rely on the following legal bases: performance of a contract with you, your consent, our legitimate interests in operating and improving our services, and compliance with legal obligations.
+We do not sell your personal data. We share information only as needed to run our services or as required by law.
+Service providers who process data on our behalf under contract (for example, hosting and infrastructure).
+Professional advisers, auditors, and authorities where required by law.
+In connection with a merger, acquisition, or sale of assets, subject to this policy.
+Security is core to what we do. Integrations are scoped to read-only, least-privilege access, data is encrypted in transit and at rest, and we collect only what is needed to assess your controls. No method of transmission or storage is completely secure, but we work to protect your information using industry-standard safeguards.
+We retain personal data for as long as needed to provide our services, comply with our legal obligations, resolve disputes, and enforce our agreements. When data is no longer needed, we delete or anonymise it.
+We may process and store information in countries other than where you are located. Where we transfer personal data internationally, we use appropriate safeguards consistent with applicable law.
+Depending on your location, you may have rights to access, correct, delete, or port your personal data, and to object to or restrict certain processing. To exercise these rights, contact us using the details below.
+We use cookies and similar technologies to run the website, remember your preferences (such as light or dark theme), and understand how our site is used. You can control cookies through your browser settings.
+CyberPlug is a business product and is not directed to children. We do not knowingly collect personal data from anyone under the age of 16.
+We may update this Privacy Policy from time to time. When we make material changes, we will update the date above and, where appropriate, notify you.
+If you have questions about this Privacy Policy or how we handle your data, contact us at
+[email protected]
+.
+Compliance intelligence for regulated industries. Map your controls to every framework you’re held to and know exactly where you stand.
+ISO 27001
+PCI-DSS
+SOC 2
+Platform
+Frameworks
+Integrations
+Trust profile
+Book a demo
+ISO 27001
+ISO 42001
+PCI-DSS
+GDPR
+NIST CSF
+About
+FAQ
+Contact
+©
+2026
+CyberPlug. All rights reserved.
+Privacy Policy
+Terms of Service
+How it works
+Book a demo
+
+--- Page: https://cyberplug.cc/terms ---
+Terms of Service — CyberPlug
+Platform
+How it works
+About
+Book a demo
+Last updated:
+July 29, 2026
+These terms govern your access to and use of CyberPlug. Please read them carefully.
+These Terms of Service govern your access to and use of the CyberPlug website and platform (the "Services"). By accessing or using the Services, you agree to be bound by these terms. If you do not agree, do not use the Services.
+CyberPlug is a compliance intelligence platform that connects to your systems, maps your security controls to the frameworks you answer to, and helps you collect and maintain audit evidence. We may update, improve, or change the Services over time.
+You must be able to form a binding contract to use the Services, and you are responsible for the activity that happens under your account. Keep your credentials secure and notify us promptly of any unauthorised use.
+You agree not to misuse the Services. In particular, you will not:
+Access data or systems you are not authorised to access.
+Interfere with or disrupt the integrity or performance of the Services.
+Reverse engineer or attempt to extract source code, except where permitted by law.
+Use the Services to violate any applicable law or the rights of others.
+You retain ownership of the data you connect to or submit through the Services. You are responsible for ensuring you have the rights and permissions needed to connect your systems and share that data with CyberPlug for processing under our Privacy Policy.
+The Services integrate with third-party tools you choose to connect. Your use of those tools is governed by their own terms, and we are not responsible for third-party services or their availability.
+CyberPlug and its licensors own all rights in the Services, including the software, design, and content, excluding your data. These terms do not grant you any rights in our intellectual property except the limited right to use the Services as permitted here.
+The Services are provided "as is" and "as available" without warranties of any kind, whether express or implied. CyberPlug supports your compliance work but does not provide legal advice, and does not guarantee any particular audit outcome or regulatory result.
+To the maximum extent permitted by law, CyberPlug will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of profits, revenue, or data, arising out of or related to your use of the Services.
+You may stop using the Services at any time. We may suspend or terminate access if you breach these terms or to protect the Services. Provisions that by their nature should survive termination will survive.
+These terms are governed by the laws of the jurisdiction in which CyberPlug is established, without regard to conflict-of-laws principles.
+We may update these Terms of Service from time to time. When we make material changes, we will update the date above and, where appropriate, notify you. Continued use of the Services after changes take effect means you accept the updated terms.
+If you have questions about these terms, contact us at
+[email protected]
+.
+Compliance intelligence for regulated industries. Map your controls to every framework you’re held to and know exactly where you stand.
+ISO 27001
+PCI-DSS
+SOC 2
+Platform
+Frameworks
+Integrations
+Trust profile
+Book a demo
+ISO 27001
+ISO 42001
+PCI-DSS
+GDPR
+NIST CSF
+About
+FAQ
+Contact
+©
+2026
+CyberPlug. All rights reserved.
+Privacy Policy
+Terms of Service
+How it works
+Book a demo

@@ -6,6 +6,7 @@ dependencies = [
     "apscheduler>=3.11.3",
     "asyncpg>=0.31.0",
     "beautifulsoup4>=4.15.0",
+    "cloudinary>=1.40.0",
     "cryptography>=50.0.0",
     "email-validator>=2.3.0",
     "fastapi>=0.141.1",

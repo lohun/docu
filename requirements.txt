@@ -18,3 +18,4 @@ pyyaml
 beautifulsoup4
 pytest-playwright
 vercel
+cloudinary

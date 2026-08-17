@@ -39,3 +39,17 @@ class SnapshotStore:
             except PermissionError as e:
                 logger.error(f"Permission denied deleting {raw_storage_ref}: {e}")
                 raise
+
+    def list_refs(self) -> list[str]:
+        """List every snapshot ref currently stored (for orphan cleanup)."""
+        if not self.base_dir.exists():
+            return []
+        refs = []
+        for path in self.base_dir.iterdir():
+            if (
+                path.is_file()
+                and path.suffix in (".raw", ".png", ".jpg", ".jpeg", ".webp")
+                and path.stem.isdigit()
+            ):
+                refs.append(str(path))
+        return refs

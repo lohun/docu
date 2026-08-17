@@ -18,6 +18,7 @@ class Snapshot(Base, PKMixin):
     normalized_excerpt = Column(Text, nullable=True)
     fetched_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), default=_now)
     raw_storage_ref = Column(String(512), nullable=False)
+    screenshot_storage_ref = Column(String(512), nullable=True)
 
     source = relationship("Source", backref="snapshots")
 

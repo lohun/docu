@@ -39,6 +39,21 @@ def test_production_requires_secure_cookies() -> None:
         validate_settings(settings)
 
 
+def test_production_cloudinary_backend_requires_url() -> None:
+    settings = Settings(
+        _env_file=None,
+        environment="production",
+        jwt_secret_key="a-strong-production-secret-that-is-long-enough",
+        storage_backend="cloudinary",
+        cloudinary_url="",
+    )
+    with pytest.raises(RuntimeError, match="CLOUDINARY_URL"):
+        validate_settings(settings)
+
+    settings.cloudinary_url = "cloudinary://key:secret@mycloud"
+    validate_settings(settings)  # should not raise
+
+
 def test_production_valid_config_passes() -> None:
     settings = Settings(
         _env_file=None,

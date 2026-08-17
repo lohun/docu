@@ -24,7 +24,7 @@
 
 ## Data model rules
 - Alembic for all schema changes; migration files committed with models, each with a tested `downgrade()`. `alembic upgrade head` is an explicit pre-start deploy step. Migrations run against whatever `DOCVERSION_DATABASE_URL` points at (Supabase pooler in prod/staging; a local PG for dev).
-- `snapshots.raw_storage_ref` = file path on disk (e.g. `/var/lib/docversion/snapshots/{id}.raw`) — never store raw HTML/spec blobs in Postgres.
+- `snapshots.raw_storage_ref` / `screenshot_storage_ref` = Cloudinary private-asset public IDs (e.g. `snapshots/{id}.raw`, `snapshots/{id}.png`) in prod — never store raw HTML/spec blobs in Postgres. Access via the `app.storage` `SnapshotStore` protocol (`get_snapshot_store()` factory): `local` backend for dev/tests, `cloudinary` backend for prod (`DOCVERSION_STORAGE_BACKEND`, `DOCVERSION_CLOUDINARY_URL`). Snapshot blobs use `type="private"` (never public CDN); git-export `.md` mirrors are public `type="upload"` assets.
 - `docs.current_content_md` is the materialized "latest" view; `doc_updates` is the append-only audit trail. Never recompute history from diffs.
 - Indexes required: `(source_id, fetched_at desc)` on snapshots, `(org_id, updated_at desc)` on docs.
 
