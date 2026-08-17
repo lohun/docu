@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 
 from app.models.base import Base, PKMixin
 
@@ -19,4 +19,4 @@ class RunLog(Base, PKMixin):
     outcome = Column(String(30), nullable=False, default="running")  # "running" | "success" | "failed" | "skipped"
     error_message = Column(Text, nullable=True)
 
-    source = relationship("Source", backref="run_logs")
+    source = relationship("Source", backref=backref("run_logs", passive_deletes=True))

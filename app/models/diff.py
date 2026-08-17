@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 
 from app.models.base import Base, PKMixin
 
@@ -22,4 +22,4 @@ class Diff(Base, PKMixin):
     is_trivial = Column(Boolean, nullable=False, server_default="false", default=False)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), default=_now)
 
-    source = relationship("Source", backref="diffs")
+    source = relationship("Source", backref=backref("diffs", passive_deletes=True))

@@ -1,18 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_org, get_current_user, require_role
 from app.db import get_session, get_source_with_doc
+from app.models.diff import Diff
 from app.models.doc import Doc
+from app.models.doc_update import DocUpdate
 from app.models.organization import Organization
 from app.models.run_log import RunLog
+from app.models.snapshot import Snapshot
 from app.models.source import Source
 from app.models.user import User
 from app.publish.db_publish import slugify
 from app.rate_limit import limiter
 from app.schemas.sources import SourceCreate, SourceOut, SourceUpdate
 from app.security import SSRFError, validate_target_url
+from app.storage import get_snapshot_store
 
 router = APIRouter(prefix="/orgs/{org_id}/sources", tags=["sources"])
 
@@ -130,6 +134,35 @@ async def delete_source(
     if source is None:
         raise HTTPException(status_code=404, detail="source not found")
 
+    # Purge the source's snapshot blobs (raw + screenshot) from the configured
+    # store before deleting the rows that reference them. Best-effort: a missing
+    # or already-purged asset must never block the source deletion.
+    snapshot_refs = (
+        await session.execute(
+            select(Snapshot.raw_storage_ref, Snapshot.screenshot_storage_ref).where(
+                Snapshot.source_id == source.id
+            )
+        )
+    ).all()
+    store = get_snapshot_store()
+    for raw_ref, screenshot_ref in snapshot_refs:
+        for ref in (raw_ref, screenshot_ref):
+            if not ref:
+                continue
+            try:
+                store.delete_raw(ref)
+            except Exception:
+                continue
+
+    # Delete all dependent rows explicitly so a deleted source leaves nothing
+    # behind: docs (and their doc_updates audit trail), diffs, snapshots and run
+    # logs. Order avoids violating the diff/snapshot/doc FK references.
+    await session.execute(delete(DocUpdate).where(DocUpdate.source_id == source.id))
+    await session.execute(delete(Diff).where(Diff.source_id == source.id))
+    await session.execute(delete(Snapshot).where(Snapshot.source_id == source.id))
+    await session.execute(delete(RunLog).where(RunLog.source_id == source.id))
+    await session.execute(delete(Doc).where(Doc.source_id == source.id))
+
     await session.delete(source)
     await session.commit()
     return {"status": "deleted"}
@@ -159,7 +192,6 @@ async def run_source_now(
     try:
         from app.scheduler.pipeline import trigger_pipeline_run
         force_initial_doc = (doc is None or doc.current_content_md == "")
-        print(force_initial_doc)
         await trigger_pipeline_run(session, source.id, force_initial_doc=force_initial_doc)
     except ImportError:
         pass  # Pipeline placeholder until scheduler module lands

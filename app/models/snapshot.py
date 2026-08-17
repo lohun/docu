@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text, func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 
 from app.models.base import Base, PKMixin
 
@@ -20,7 +20,7 @@ class Snapshot(Base, PKMixin):
     raw_storage_ref = Column(String(512), nullable=False)
     screenshot_storage_ref = Column(String(512), nullable=True)
 
-    source = relationship("Source", backref="snapshots")
+    source = relationship("Source", backref=backref("snapshots", passive_deletes=True))
 
     __table_args__ = (
         Index("ix_snapshots_source_id_fetched_at", "source_id", "fetched_at"),

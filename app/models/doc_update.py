@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 
 from app.models.base import Base, PKMixin
 
@@ -24,5 +24,5 @@ class DocUpdate(Base, PKMixin):
     status = Column(String(20), nullable=False, server_default="published", default="published")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), default=_now)
 
-    source = relationship("Source", backref="doc_updates")
+    source = relationship("Source", backref=backref("doc_updates", passive_deletes=True))
     doc = relationship("Doc", backref="updates")
